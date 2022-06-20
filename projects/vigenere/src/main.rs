@@ -1,7 +1,7 @@
 use bimap::BiMap;
 use std::io;
 
-fn main() {
+fn main() -> Result<(), io::Error> {
     let char_map = build_char_map();
 
     println!("What would you like to do? (e)ncrypt/(d)ecrypt:");
@@ -18,44 +18,40 @@ fn main() {
     }
 }
 
-fn operation_encrypt(char_map: &BiMap<char, i32>) {
+fn operation_encrypt(char_map: &BiMap<char, i32>) -> Result<(), io::Error> {
     println!("Enter the word/phrase to encrypt:");
 
     let mut to_encrypt = String::new();
-    io::stdin()
-        .read_line(&mut to_encrypt)
-        .expect("Failed to read phrase");
+    io::stdin().read_line(&mut to_encrypt)?;
 
     println!("Enter a short secret word to use for encryption:");
 
     let mut secret = String::new();
-    io::stdin()
-        .read_line(&mut secret)
-        .expect("Failed to read secret word");
+    io::stdin().read_line(&mut secret)?;
 
     let result = encrypt(&to_encrypt, &secret, char_map);
 
     println!("Encrypted: {}", result);
+
+    Ok(())
 }
 
-fn operation_decrypt(char_map: &BiMap<char, i32>) {
+fn operation_decrypt(char_map: &BiMap<char, i32>) -> Result<(), io::Error> {
     println!("Enter the text to decrypt:");
 
     let mut to_decrypt = String::new();
-    io::stdin()
-        .read_line(&mut to_decrypt)
-        .expect("Failed to read phrase");
+    io::stdin().read_line(&mut to_decrypt)?;
 
     println!("Enter the secret word you provided when encrypting:");
 
     let mut secret = String::new();
-    io::stdin()
-        .read_line(&mut secret)
-        .expect("Failed to read secret word");
+    io::stdin().read_line(&mut secret)?;
 
     let result = decrypt(&to_decrypt, &secret, char_map);
 
     println!("Decrypted: {}", result);
+
+    Ok(())
 }
 
 fn encrypt(to_encrypt: &str, secret: &str, char_map: &BiMap<char, i32>) -> String {
@@ -141,23 +137,39 @@ fn build_char_map() -> BiMap<char, i32> {
 mod tests {
     use super::*;
 
+    struct EncryptTestCase {
+        to_encrypt: String,
+        secret: String,
+        want: String,
+    }
+
     #[test]
     fn test_encrypt() {
         let char_map = build_char_map();
 
         let test_cases = [
-            ("attack at dawn", "lemon", "LXFOPVEFRNHR"),
-            (
-                "crypto is short for cryptography",
-                "abcd",
-                "CSASTPKVSIQUTGQUCSASTPIUAQJB",
-            ),
+            EncryptTestCase {
+                to_encrypt: "attack at dawn".to_string(),
+                secret: "lemon".to_string(),
+                want: "LXFOPVEFRNHR".to_string(),
+            },
+            EncryptTestCase {
+                to_encrypt: "crypto is short for cryptography".to_string(),
+                secret: "abcd".to_string(),
+                want: "CSASTPKVSIQUTGQUCSASTPIUAQJB".to_string(),
+            },
         ];
 
         for tc in test_cases {
-            let result = encrypt(tc.0, tc.1, &char_map);
-            assert_eq!(result, tc.2);
+            let result = encrypt(&tc.to_encrypt, &tc.secret, &char_map);
+            assert_eq!(result, tc.want);
         }
+    }
+
+    struct DecryptTestCase {
+        to_decrypt: String,
+        secret: String,
+        want: String,
     }
 
     #[test]
@@ -165,32 +177,58 @@ mod tests {
         let char_map = build_char_map();
 
         let test_cases = [
-            ("LXFOPVEFRNHR", "lemon", "ATTACKATDAWN"),
-            (
-                "CSASTPKVSIQUTGQUCSASTPIUAQJB",
-                "abcd",
-                "CRYPTOISSHORTFORCRYPTOGRAPHY",
-            ),
+            DecryptTestCase {
+                to_decrypt: "LXFOPVEFRNHR".to_string(),
+                secret: "lemon".to_string(),
+                want: "ATTACKATDAWN".to_string(),
+            },
+            DecryptTestCase {
+                to_decrypt: "CSASTPKVSIQUTGQUCSASTPIUAQJB".to_string(),
+                secret: "abcd".to_string(),
+                want: "CRYPTOISSHORTFORCRYPTOGRAPHY".to_string(),
+            },
         ];
 
         for tc in test_cases {
-            let result = decrypt(tc.0, tc.1, &char_map);
-            assert_eq!(result, tc.2);
+            let result = decrypt(&tc.to_decrypt, &tc.secret, &char_map);
+            assert_eq!(result, tc.want);
         }
+    }
+
+    struct RepeatTestCase {
+        input: String,
+        n: usize,
+        want: String,
     }
 
     #[test]
     fn test_repeat() {
         let test_cases = [
-            ("hello", 3, "hel"),
-            ("hello", 5, "hello"),
-            ("hello", 8, "hellohel"),
-            ("hello", 10, "hellohello"),
+            RepeatTestCase {
+                input: "hello".to_string(),
+                n: 3,
+                want: "hel".to_string(),
+            },
+            RepeatTestCase {
+                input: "hello".to_string(),
+                n: 5,
+                want: "hello".to_string(),
+            },
+            RepeatTestCase {
+                input: "hello".to_string(),
+                n: 8,
+                want: "hellohel".to_string(),
+            },
+            RepeatTestCase {
+                input: "hello".to_string(),
+                n: 10,
+                want: "hellohello".to_string(),
+            },
         ];
 
         for tc in test_cases {
-            let result = repeat(tc.0, tc.1);
-            assert_eq!(result, tc.2);
+            let result = repeat(&tc.input, tc.n);
+            assert_eq!(result, tc.want);
         }
     }
 }
