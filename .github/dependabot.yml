@@ -6,4 +6,4 @@ updates:
   - package-ecosystem: "cargo"
     directory: "/projects/vigenere/"
     schedule:
-      interval: "daily"
+      interval: "monthly"
