@@ -109,7 +109,7 @@ fn repeat(input: &str, len: usize) -> String {
         return input.to_string();
     }
 
-    let mut result = input.clone();
+    let mut result = input;
 
     if result.len() < len {
         return repeat(result.repeat(2).as_str(), len);
